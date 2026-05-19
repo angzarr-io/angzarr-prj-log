@@ -1,0 +1,6 @@
+[submodule "angzarr-project"]
+	path = angzarr-project
+	url = https://github.com/angzarr-io/angzarr-project.git
+[submodule "angzarr-client-rust"]
+	path = angzarr-client-rust
+	url = https://github.com/angzarr-io/angzarr-client-rust.git
