@@ -1,0 +1,24 @@
+# angzarr-prj-log — container-side recipes.
+#
+# Mounted over `justfile` inside the container, used in place in a
+# devcontainer, and run directly by CI (`just -f justfile.container`).
+set shell := ["bash", "-c"]
+
+# The checkout root: this file sits at the top. Independent of git, so a git
+# worktree whose .git points outside the mount works too.
+TOP := justfile_directory()
+
+default:
+    @just --list
+
+# Architecture lint: check the workspace's module dependency graph against
+# the layer rules in archlint.toml (tools/archlint). `cargo run -p archlint --
+# --edges` prints the model the rules are checked against.
+archlint:
+    cargo run --manifest-path {{TOP}}/Cargo.toml --quiet -p archlint -- --rules {{TOP}}/archlint.toml --manifest-path {{TOP}}/Cargo.toml
+
+# Build and run the tests. The angzarr-client-rust checkout's proto bindings
+# are gitignored; GENERATE_PROTOS=1 makes its build script emit them from its
+# angzarr-project submodule.
+test:
+    GENERATE_PROTOS=1 cargo test --manifest-path {{TOP}}/Cargo.toml --workspace

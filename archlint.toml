@@ -1,0 +1,67 @@
+# Architecture rules for angzarr-prj-log, checked by `just archlint`
+# (tools/archlint; pattern syntax and rule semantics in
+# tools/archlint/src/rules.rs). `cargo run -p archlint -- --edges` prints the
+# module graph these rules are checked against.
+#
+# angzarr_client (the angzarr-client-rust checkout) is outside this
+# workspace, so rules about it use `deny` (`allow` constrains only workspace
+# modules); `self::**` is the module's own subtree.
+#
+# Layers, bottom to top:
+#   output   formatting and sinks (stdout, file, colorizing); plain std
+#   log      the projector-coordinator service: decodes events and hands
+#            them to an output
+
+[[rule]]
+name = "output-is-a-leaf"
+why = "event formatting and output sinks know nothing of gRPC, the client's protos or descriptor decoding; the service layer feeds them decoded events"
+from = ["angzarr_prj_log::output::**"]
+scope = "lib"
+allow = ["self::**", "angzarr_prj_log::output::**"]
+deny = ["tonic::**", "angzarr_client::**", "prost_reflect::**", "tokio::**"]
+
+# ---- shared by every angzarr projector ---------------------------------------
+
+[[rule]]
+name = "process-wiring-stays-out"
+why = "the projector is a library of service and projection logic; binding listeners, dialing coordinators and signal handling belong to the binary that deploys it"
+from = ["angzarr_prj_log::**"]
+scope = "lib"
+deny = [
+    "tonic::transport::**",
+    "tokio::net::**",
+    "tokio::signal::**",
+    "angzarr_client::host::**",
+    "angzarr_client::server::**",
+    "angzarr_client::readiness::**",
+    "angzarr_client::ComponentHost",
+    "angzarr_client::RunningHost",
+    "angzarr_client::HostAddress",
+    "angzarr_client::ServerConfig",
+]
+
+[[rule]]
+name = "client-messages-not-client-machinery"
+why = "the projector consumes the client's message types and proto extensions; it never routes through the client's component router or dials through its consumer clients"
+from = ["angzarr_prj_log::**"]
+scope = "lib"
+deny = [
+    "angzarr_client::router::**",
+    "angzarr_client::handler::**",
+    "angzarr_client::client::**",
+    "angzarr_client::builder::**",
+    "angzarr_client::*Client",
+]
+
+[[rule]]
+name = "testing-is-for-tests"
+why = "the client's `testing` feature (builders, fakes) serves this crate's tests only"
+from = ["angzarr_prj_log::**"]
+scope = "lib"
+deny = ["angzarr_client::testing::**"]
+
+[[rule]]
+name = "tooling-is-a-leaf"
+why = "the projector never depends on the architecture linter"
+from = ["angzarr_prj_log::**"]
+deny = ["archlint::**"]
