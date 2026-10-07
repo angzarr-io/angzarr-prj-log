@@ -1,0 +1,42 @@
+# This package is the workspace root (and so a member); listing "." would make
+# every directory below it an explicit member and void the exclude.
+[workspace]
+members = ["tools/archlint"]
+# The client checkout is its own workspace, used here as a path dependency.
+exclude = ["angzarr-client-rust"]
+resolver = "2"
+
+# Inherited by workspace tooling (tools/archlint).
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+
+[package]
+name = "angzarr-prj-log"
+version = "0.1.0"
+edition = "2021"
+description = "Log projector for Angzarr — pretty-prints events to stdout/file with optional JSON decoding"
+license = "AGPL-3.0-only"
+repository = "https://github.com/angzarr-io/angzarr-prj-log"
+keywords = ["cqrs", "event-sourcing", "logging", "grpc"]
+categories = ["development-tools::debugging"]
+
+[dependencies]
+angzarr-client = { path = "angzarr-client-rust" }
+
+prost = "0.14"
+prost-types = "0.14"
+prost-reflect = { version = "0.16", features = ["serde"] }
+
+tonic = { version = "0.14", features = ["tls-ring", "transport"] }
+tonic-prost = "0.14.5"
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+serde_json = "1"
+hex = "0.4"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "test-util"] }

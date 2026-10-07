@@ -1,0 +1,30 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+#
+# Setup: lefthook install
+# Wires up the shared submodule-protection recipes from
+# angzarr-project/submodule.just. See the parent's justfile for the
+# import line.
+
+post-checkout:
+  commands:
+    install-submodule-hooks:
+      run: just install-submodule-hooks
+
+post-merge:
+  commands:
+    install-submodule-hooks:
+      run: just install-submodule-hooks
+
+pre-commit:
+  parallel: false
+  commands:
+    check-submodules-clean:
+      run: just check-submodules-clean
+    # Refuse commits whose staged files contain secrets (gitleaks).
+    scan-secrets:
+      run: just scan-secrets
+    # Module-level layer rules (archlint.toml) over the Rust workspace.
+    archlint:
+      glob: "*.{rs,toml}"
+      run: just archlint
